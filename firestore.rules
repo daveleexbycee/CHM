@@ -1,0 +1,89 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isUserAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isUserAdmin() {
+      return isUserAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
+    
+    function isOwner(userId) {
+      return isUserAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Publicly readable collections
+    match /news/{articleId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+    
+    match /matches/{matchId} {
+        allow read: if true;
+        allow write: if isUserAdmin();
+    }
+    
+    match /highlights/{highlightId} {
+        allow read: if true;
+        allow write: if isUserAdmin();
+    }
+
+    match /products/{productId} {
+        allow read: if true;
+        allow write: if isUserAdmin();
+    }
+
+    match /players/{playerId} {
+        allow read: if true;
+        allow write: if isUserAdmin();
+    }
+    
+    match /standings/{teamId} {
+        allow read: if true;
+        allow write: if isUserAdmin();
+    }
+
+    match /events/{eventId} {
+      allow read: if isUserAuthenticated();
+      allow write: if isUserAdmin();
+    }
+
+    // User-specific data
+    match /users/{userId} {
+      allow read: if true;
+      allow update: if isOwner(userId);
+      allow create: if isUserAuthenticated();
+    }
+    
+    // Orders
+    match /orders/{orderId} {
+        allow create: if isOwner(request.resource.data.userId);
+        allow read: if isUserAdmin();
+    }
+    
+    // Polls
+    match /polls/{pollId} {
+        allow read: if true;
+        allow write: if isUserAdmin(); // create, update, delete polls
+
+        match /votes/{userId} {
+            allow read: if isUserAuthenticated();
+            // A user can only create a vote for themselves
+            // and cannot update their vote once cast.
+            allow create: if isOwner(userId);
+            allow update: if false; 
+            allow delete: if false;
+        }
+    }
+    
+     match /settings/{settingId} {
+      allow read: if isUserAuthenticated();
+      allow write: if isUserAdmin();
+    }
+  }
+}
