@@ -27,7 +27,7 @@ export const Adsense = () => {
     }, [pathname]);
 
     return (
-        <div ref={adRef} key={pathname} style={{ overflow: 'hidden', margin: '16px 0' }}>
+        <div ref={adRef} key={pathname} style={{ margin: '16px 0' }}>
             <ins
                 className="adsbygoogle"
                 style={{ display: 'block', textAlign: 'center' }}
